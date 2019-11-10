@@ -1,0 +1,28 @@
+{% load staticfiles %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+    <img src="{% static '/images/timg.gif' %}" alt="">
+    <span id="time"></span>
+</body>
+</html>
+<script>
+    onload=function(){
+        setInterval(go, 1000);
+    };
+
+    var x = 4; //利用了全局变量来执行
+
+    function go(){
+        x--;
+        if(x>0){
+            document.getElementById("time").innerHTML='注册成功，页面'+x+'秒后跳转...';  //每次设置的x的值都不一样了。
+        }else{
+            location.href='http://127.0.0.1:8000/user/login/';  // 设置你的注册页面
+        }
+    }
+</script>

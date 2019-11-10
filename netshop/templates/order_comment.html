@@ -1,0 +1,80 @@
+{% extends 'public/base_no_cart.html' %}
+
+{% load staticfiles %}
+
+{% block title %}商品评论{% endblock %}
+
+{% block js %}
+    <script src="{% static 'js/jquery-1.12.4.min.js' %}"></script>
+{% endblock %}
+
+{% block search_title %}评论信息{% endblock %}
+
+{% block content %}
+	<div class="main_con clearfix">
+
+    <div class="left_menu_con clearfix">
+    <h3>用户中心</h3>
+    <ul>
+        <li><a href="/user/" >· 个人信息</a></li>
+        <li><a href="/user/order/1" >· 全部订单</a></li>
+        <li><a href="/user/address/" >· 收货地址</a></li>
+    </ul>
+</div>
+
+    <div class="right_content clearfix">
+            <h3 class="common_title2">订单评价</h3>
+
+            <ul class="order_list_th w978 clearfix">
+                <li class="col01">{{ order.create_time }}</li>
+                <li class="col02">订单号：{{ order.order_id }}</li>
+                <li class="col02 stress">{{ order.status_name }}</li>
+            </ul>
+
+            <form method="post" action="/order/comment/{{ order.order_id }}">
+                {% csrf_token %}
+
+                <input type="hidden" name="order_id" value="{{ order.order_id }}">
+
+                <input type="hidden" name="total_count" value="{{ order.order_skus|length }}">
+
+            {% for order_sku in order.order_skus %}
+                <table class="order_list_table w980">
+                    <tbody>
+                        <tr>
+                            <td width="55%">
+
+
+                                <ul class="order_goods_list clearfix">
+                                    <li class="col01"><img src="/media/{{ order_sku.sku.image }}"></li>
+                                    <li class="col02">{{ order_sku.sku.name }}<em>{{ order_sku.price }}元/{{ order_sku.sku.unite }}g</em></li>
+                                    <li class="col03">{{ order_sku.count }}件</li>
+                                    <li class="col04"></li>
+                                </ul>
+
+                            </td>
+                            <td width="20%"> {{ order_sku.amount }}元</td>
+
+                        </tr>
+                    </tbody>
+                </table>
+
+
+                <div class="site_con">
+                    <div class="form_group form_group2">
+                        <input type="hidden" name="sku_{{ forloop.counter }}" value="{{ order_sku.sku.id }}">
+                        <label for="">评价内容：</label>
+                        <textarea name="content_{{ forloop.counter }}" class='site_area' id="" cols="30" rows="10"></textarea>
+                    </div>
+                </div>
+            {% endfor %}
+
+            <input type="submit" value="提交" class="info_submit">
+
+        </form>
+
+    </div>
+</div>
+{% endblock %}
+
+{% block bottom_js %}{% endblock %}

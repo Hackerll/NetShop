@@ -1,0 +1,263 @@
+{% extends 'public/base_no_cart.html' %}
+{% load staticfiles %}
+{% block js %}
+    <script src="{% static 'js/jquery-1.12.4.min.js' %}"></script>
+{% endblock %}
+{% block title %}购物车{% endblock %}
+
+{% block search_title %}购物车{% endblock %}
+
+
+{% block content %}
+<div class="total_count">全部商品<em>{{ total_count }}</em>件</div>
+	<ul class="cart_list_th clearfix">
+		<li class="col01">商品名称</li>
+		<li class="col02">商品单位</li>
+		<li class="col03">商品价格</li>
+		<li class="col04">数量</li>
+		<li class="col05">小计</li>
+		<li class="col06">操作</li>
+	</ul>
+    <form action="/order/place/" method="post">
+    {% for sku in skus %}
+        <ul class="cart_list_td clearfix">
+            <input type="hidden" name="sku_ids" value="{{ sku.id }}">
+            <li class="col01"><input type="checkbox" name="" checked></li>
+            <li class="col02"><img src="/media/{{ sku.image }}"></li>
+            <li class="col03">{{ sku.name }}<br><em>{{ sku.price }}元/{{ sku.unite }}g</em></li>
+            <li class="col04">{{ sku.unite }}g</li>
+            <li class="col05">{{ sku.price }}元</li>
+            <li class="col06">
+                <div class="num_add">
+                    {% csrf_token %}
+                    <a href="javascript:;" class="add fl">+</a>
+                    <input type="text" class="num_show fl" value="{{ sku.count }}" sku_id="{{ sku.id }}">
+                    <a href="javascript:;" class="minus fl">-</a>
+                </div>
+            </li>
+            <li class="col07">{{ sku.amount }}元</li>
+            <li class="col08"><a href="javascript:;">删除</a></li>
+        </ul>
+    {% endfor %}
+
+
+	<ul class="settlements">
+		<li class="col01"><input type="checkbox" name="" checked=""></li>
+		<li class="col02">全选</li>
+		<li class="col03">合计(不含运费)：<span>¥</span><em>{{ total_price }}</em><br>共计<b>{{ total_count }}</b>件商品</li>
+		<li class="col04"><input type="submit" value="去结算"></li>
+	</ul>
+    </form>
+{% endblock %}
+
+{% block bottom_js %}
+    <script>
+        // 2- 获取商品总价格与总数量
+        function update_page_info(){
+            total_count = 0
+            total_price = 0
+
+            $('.cart_list_td').find(':checked').parents('ul').each(function(){
+                count = $(this).find('.num_show').val()
+                amount = $(this).find('.col07').text()
+                total_count += parseInt(count)
+                total_price += parseFloat(amount)
+            })
+            $('.settlements').find('em').text(total_price.toFixed(2))
+            $('.settlements').find('b').text(total_count)
+            $('.total_count').find('em').text(total_count)
+        }
+
+        // 1- 全选/反选
+        $('.settlements').find(':checkbox').change(function(){
+            is_checked = $(this).prop('checked')
+            $('.cart_list_td').find(':checkbox').prop('checked',is_checked)
+
+            update_page_info();
+        })
+
+        // 3- 商品对应的checkbox的状态发生改变是，设置全选按钮的checkbox的状态
+        $('.cart_list_td').find(':checkbox').change(function(){
+            // 所有商品的个数
+            all_len = $('.cart_list_td').length
+            // 选中商品的个数
+            checked_len = $('.cart_list_td').find(':checked').length
+
+            is_checked = true
+            if(checked_len < all_len){
+                is_checked = false
+            }
+            $('.settlements').find(':checkbox').prop('checked',is_checked)
+
+            update_page_info()
+        })
+
+        // 5- 获取商品小计
+        function update_goods_amount(sku_ul){
+            count = sku_ul.find('.num_show').val()
+            price = sku_ul.find('.col05').text()
+            amount = parseInt(count) * parseFloat(price)
+
+            sku_ul.find('.col07').text(amount.toFixed(2)+'元')
+        }
+
+        // 4- 添加商品 sku_id count
+        $('.add').click(function(){
+            // 获取参数
+            count = $(this).next().val()
+            count = parseInt(count) + 1
+            sku_id = $(this).next().attr('sku_id')
+            csrf = $('input[name="csrfmiddlewaretoken"]').val()
+            // 组织上下文
+            params = {
+                'sku_id':sku_id,
+                'count':count,
+                'csrfmiddlewaretoken':csrf
+            }
+
+            err_update = true
+            // 设置ajax 为 同步
+            $.ajaxSettings.async = false
+
+            // 发送ajax请求
+            $.post('/cart/update/',params,function(data){
+                if(data.res == 5){
+                    err_update = false
+                }else{
+                    err_update = true
+                    alert(data.errmsg)
+                }
+            })
+            // 设置ajax 为 异步
+            $.ajaxSettings.async = true
+
+            // 重设置数据
+            if(err_update == false){
+                // 重置输入框
+                $(this).next().val(count)
+                // 获取商品小计
+                update_goods_amount($(this).parents('ul'));
+                update_page_info()
+            }
+
+        })
+
+        // 6- 减少商品 sku_id count
+        $('.minus').click(function(){
+            // 获取参数
+            count = $(this).prev().val()
+            count = parseInt(count) - 1
+            if(count < 1){
+                count = 1
+            }
+            sku_id = $(this).prev().attr('sku_id')
+            csrf = $('input[name="csrfmiddlewaretoken"]').val()
+            // 组织上下文
+            params = {
+                'sku_id':sku_id,
+                'count':count,
+                'csrfmiddlewaretoken':csrf
+            }
+
+            err_update = true
+            // 设置ajax 为 同步
+            $.ajaxSettings.async = false
+
+            // 发送ajax请求
+            $.post('/cart/update/',params,function(data){
+                if(data.res == 5){
+                    err_update = false
+                }else{
+                    err_update = true
+                    alert(data.errmsg)
+                }
+            })
+            // 设置ajax 为 异步
+            $.ajaxSettings.async = true
+
+            // 重设置数据
+            if(err_update == false){
+                // 重置输入框
+                $(this).prev().val(count)
+                // 获取商品小计
+                update_goods_amount($(this).parents('ul'));
+                // 获取商品总价格与总数量
+                update_page_info()
+            }
+        })
+
+        // 7-获取手动输入之前的值
+        $('.num_show').focus(function(){
+            pre_count = $(this).val()
+            pre_count = parseInt(pre_count)
+        })
+
+        //8- 手动输入设置
+         $('.num_show').blur(function(){
+            // 获取参数
+            count = $(this).val()
+            count = parseInt(count)
+            if(count < 1 || isNaN(count)){
+                count = pre_count
+            }
+            sku_id = $(this).attr('sku_id')
+            csrf = $('input[name="csrfmiddlewaretoken"]').val()
+            // 组织上下文
+            params = {
+                'sku_id':sku_id,
+                'count':count,
+                'csrfmiddlewaretoken':csrf
+            }
+
+            err_update = true
+            // 设置ajax 为 同步
+            $.ajaxSettings.async = false
+
+            // 发送ajax请求
+            $.post('/cart/update/',params,function(data){
+                if(data.res == 5){
+                    err_update = false
+                }else{
+                    err_update = true
+                    alert(data.errmsg)
+                }
+            })
+            // 设置ajax 为 异步
+            $.ajaxSettings.async = true
+
+            // 重设置数据
+            if(err_update == false){
+                // 重置输入框
+                $(this).val(count)
+                // 获取商品小计
+                update_goods_amount($(this).parents('ul'));
+                // 获取商品总价格与总数量
+                update_page_info()
+            }else{
+                $(this).val(pre_count)
+            }
+        })
+
+        //9- 删除
+        $('.cart_list_td').children('.col08').children('a').click(function(){
+            // 获取 sku_id
+            sku_id = $(this).parents('ul').find('.num_show').attr('sku_id')
+            csrf = $('input[name="csrfmiddlewaretoken"]').val()
+            // 组织上下文
+            params = {
+                'sku_id':sku_id,
+                'csrfmiddlewaretoken':csrf
+            }
+            // 获取当前商品的ul列表
+            sku_ul = $(this).parents('ul')
+
+            $.post('/cart/delete/',params,function(data){
+                if(data.res == 3){
+                    sku_ul.remove()
+                    update_page_info()
+                }
+            })
+        })
+
+    </script>
+{% endblock %}

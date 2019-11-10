@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+关键字：{{ query }}
+<hr>
+当前page对象：{{ page }}
+<br>
+{% for p in page %}
+    {{ p.object.name }} <br>
+    {{ p.object.desc }} <br>
+{% endfor %}
+<hr>
+分页器：{{ paginator.page_range }}
+</body>
+</html>
