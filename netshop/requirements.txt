@@ -11,5 +11,5 @@ pycryptodomex==3.7.2
 python-alipay-sdk==1.10.1
 pytz==2019.2
 redis==3.3.8
-sqlparse==0.3.0
+sqlparse==0.4.4
 Whoosh==2.7.4
